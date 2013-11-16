@@ -12,19 +12,22 @@ import java.util.Stack;
  * File Templates.
  */
 public class StackScriptREPL {
-public static void main(String[] args) throws IOException {
-	int x;
-	BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-	SRootClosure root = new SRootClosure();
-	Stack<SObject> stk = new Stack<SObject>();
-	SSBasicLibrary.registerWith(root);
-	root.eval("\"Hello, welcome to the repl!\\nHave fun! (type 'exit' to close)\" print",stk);
-	while(true) {
-		System.out.print("> ");
-		String in = stdin.readLine();
-		if (in.equals("exit")) break;
-		root.eval(in, stk);
-		System.out.println(stk);
+	public static void main(String[] args) throws IOException {
+		int x;
+		BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+		SRootClosure root = new SRootClosure();
+		Stack<SObject> stk = new Stack<SObject>();
+		SSBasicLibrary.registerWith(root);
+		root.eval("\"Hello, welcome to the repl!\\nHave fun! (type 'exit' to close)\" print", stk);
+		for (String arg : args) {
+			root.eval(arg, stk);
+		}
+		while (true) {
+			System.out.print("> ");
+			String in = stdin.readLine();
+			if (in.equals("exit")) break;
+			root.eval(in, stk);
+			System.out.println(stk);
+		}
 	}
-}
 }
