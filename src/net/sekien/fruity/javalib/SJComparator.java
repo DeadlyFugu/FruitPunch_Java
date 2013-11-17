@@ -22,7 +22,7 @@ public class SJComparator implements SJInterface {
 				if (object instanceof SBool) {
 					stack.push(new SBool(!((SBool) object).getBoolean()));
 				} else {
-					System.err.println("not arg should be bool");
+					throw new SException("not arg should be bool");
 				}
 			}
 		}));
@@ -34,10 +34,10 @@ public class SJComparator implements SJInterface {
 					if (b instanceof SInteger) {
 						stack.push(new SBool(((SInteger) a).getInt() < ((SInteger) b).getInt()));
 					} else {
-						System.err.println("lt arg 2 should be int");
+						throw new SException("lt arg 2 should be int");
 					}
 				} else {
-					System.err.println("lt arg 1 should be int");
+					throw new SException("lt arg 1 should be int");
 				}
 			}
 		}));

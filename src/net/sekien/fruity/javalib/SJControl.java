@@ -15,10 +15,10 @@ public class SJControl implements SJInterface {
 						if (((SBool) condition).getBoolean())
 							((SClosure) closure).exec(stack, callStack);
 					} else {
-						System.err.println("if arg 1 must be bool");
+						throw new SException("if arg 1 must be bool");
 					}
 				} else {
-					System.err.println("if arg 2 must be closure");
+					throw new SException("if arg 2 must be closure");
 				}
 			}
 		}));
@@ -36,13 +36,13 @@ public class SJControl implements SJInterface {
 							else
 								((SClosure) closureFalse).exec(stack, callStack);
 						} else {
-							System.err.println("ifelse arg 1 must be bool");
+							throw new SException("ifelse arg 1 must be bool");
 						}
 					} else {
-						System.err.println("ifelse arg 2 must be closure");
+						throw new SException("ifelse arg 2 must be closure");
 					}
 				} else {
-					System.err.println("ifelse arg 3 must be closure");
+					throw new SException("ifelse arg 3 must be closure");
 				}
 			}
 		}));
@@ -57,8 +57,7 @@ public class SJControl implements SJInterface {
 							int ssize = stack.size();
 							((SClosure) condition).exec(stack, callStack);
 							if (stack.size() != ssize+1) {
-								System.err.println("while condition returned multiple values");
-								break;
+								throw new SException("while condition returned multiple values");
 							}
 							if (stack.peek() instanceof SBool) {
 								if (((SBool) stack.pop()).getBoolean()) {
@@ -67,14 +66,14 @@ public class SJControl implements SJInterface {
 									break;
 								}
 							} else {
-								System.err.println("while condition returned non-bool type");
+								throw new SException("while condition returned non-bool type");
 							}
 						}
 					} else {
-						System.err.println("while arg 1 must be closure");
+						throw new SException("while arg 1 must be closure");
 					}
 				} else {
-					System.err.println("while arg 2 must be closure");
+					throw new SException("while arg 2 must be closure");
 				}
 			}
 		}));

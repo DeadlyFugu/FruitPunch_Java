@@ -44,7 +44,7 @@ public class SJIO implements SJInterface {
 							f = new File(getFilePrefix()+((SString) obj).getString());
 						}
 						if (!f.exists()) {
-							System.err.println("Error: File not found for _rf: "+((SString) obj).getString());
+							throw new SException("Error: File not found for _rf: "+((SString) obj).getString());
 						}
 						BufferedReader reader = new BufferedReader(new FileReader(f));
 						String line;

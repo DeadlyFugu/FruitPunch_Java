@@ -1,9 +1,6 @@
 package net.sekien.fruity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA. User: matt Date: 30/09/13 Time: 12:47 PM To change this template use File | Settings |
@@ -24,7 +21,7 @@ public class SClosure extends SObject {
 		this.variables = new HashMap<String, SObject>();
 	}
 
-	public SException exec(Stack<SObject> stack, Stack<SClosure> callStack) {
+	public void exec(Stack<SObject> stack, Stack<SClosure> callStack) {
 		Stack<Stack<SObject>> stackStack = new Stack<Stack<SObject>>();
 		stackStack.push(stack);
 		callStack.push(this);
@@ -42,7 +39,7 @@ public class SClosure extends SObject {
 					try {
 						((SClosure) possibleMatch).exec(stack, callStack);
 					} catch (StackOverflowError e) {
-						return new SException("Stack overflow");
+						throw new SException("Stack overflow");
 					}
 				} else {
 					stack.push(possibleMatch);
@@ -51,7 +48,7 @@ public class SClosure extends SObject {
 				resolveContextAndName(token.substring(1));
 				SObject value = resolved_context.getVariable(resolved_name);
 				if (value == null) {
-					System.out.println("Error: can not get unbound var "+token.substring(1));
+					throw new SException("Error: can not get unbound var "+token.substring(1));
 				} else {
 					stack.push(value);
 				}
@@ -72,10 +69,11 @@ public class SClosure extends SObject {
 				if (popFunc != null) {
 					resolveContextAndName(popFunc);
 					SObject possibleMatch2 = resolved_context.getVariable(resolved_name);
-					if (possibleMatch2 != null && possibleMatch2 instanceof SClosure)
+					if (possibleMatch2 != null && possibleMatch2 instanceof SClosure) {
 						((SClosure) possibleMatch2).exec(stack, callStack);
-					else
-						System.out.println("Error: No function bound to "+popFunc);
+					} else {
+						throw new SException("Error: No function bound to "+popFunc);
+					}
 				}
 				stackStack.pop();
 				stackStack.peek().addAll(stack);
@@ -117,15 +115,14 @@ public class SClosure extends SObject {
 				buildClosure.toArray(arr);
 				stack.push(new SClosure(this, arr));
 			} else {
-				System.out.println("Error: No function bound to "+token);
+				throw new SException("Error: No function bound to "+token);
 			}
 		}
 		callStack.pop();
-		return null;
 	}
 
 	private void resolveContextAndName(String reference) {
-		String[] parts = reference.split(":");
+		String[] parts = (reference.startsWith(":")?reference.substring(1):reference).split(":");
 		resolved_name = parts[parts.length-1];
 		resolved_context = this;
 		for (int i = 0; i < parts.length-1; i++) {
@@ -137,9 +134,7 @@ public class SClosure extends SObject {
 					resolved_name = null;
 					return;
 				} else {
-					System.out.println("reference '"+reference+"' contains non-existent context "+parts[i]);
-					resolved_name = null;
-					return;
+					throw new SException("reference '"+reference+"' contains non-existent context "+parts[i]);
 				}
 			}
 		}
@@ -201,5 +196,23 @@ public class SClosure extends SObject {
 			ret.add(new SString(key));
 		}
 		return ret;
+	}
+
+	public String getFullName() {
+		if (parent == null || parent instanceof SRootClosure) {
+			return getName();
+		} else {
+			return parent.getFullName()+":"+getName();
+		}
+	}
+
+	public String getName() {
+		if (parent == null) {
+			return "<anon>";
+		}
+		for (Map.Entry<String, SObject> var : parent.variables.entrySet()) {
+			if (var.getValue().equals(this)) return var.getKey();
+		}
+		return "<anon>";
 	}
 }

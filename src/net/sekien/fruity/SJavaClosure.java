@@ -8,27 +8,26 @@ import java.util.Stack;
  * File Templates.
  */
 public class SJavaClosure extends SClosure {
-private final JavaFunction function;
+	private final JavaFunction function;
 
-public SJavaClosure(SClosure parent, JavaFunction function) {
-	super(parent, null);
-	this.function = function;
-}
-
-@Override public SException exec(Stack<SObject> stack, Stack<SClosure> callStack) {
-	try {
-		function.onCall(callStack, stack, this);
-	} catch (EmptyStackException e) {
-		System.out.println("Error: native call requires more arguments");
+	public SJavaClosure(SClosure parent, JavaFunction function) {
+		super(parent, null);
+		this.function = function;
 	}
-	return null;
-}
 
-@Override public String toString() {
-	return "<native>";
-}
+	@Override public void exec(Stack<SObject> stack, Stack<SClosure> callStack) {
+		try {
+			function.onCall(callStack, stack, this);
+		} catch (EmptyStackException e) {
+			throw new SException("Error: native call requires more arguments");
+		}
+	}
 
-@Override public String toBasicString() {
-	return toString();
-}
+	@Override public String toString() {
+		return "<native>";
+	}
+
+	@Override public String toBasicString() {
+		return toString();
+	}
 }

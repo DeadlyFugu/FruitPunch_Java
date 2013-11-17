@@ -27,7 +27,8 @@ public class StackScriptREPL {
 			String in = stdin.readLine();
 			if (in.equals("exit")) break;
 			root.eval(in, stk);
-			System.out.println(stk);
+			if (!stk.isEmpty())
+				System.out.println(stk);
 		}
 	}
 }
