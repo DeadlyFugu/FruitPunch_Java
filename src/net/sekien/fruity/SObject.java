@@ -5,7 +5,17 @@ package net.sekien.fruity;
  * File Templates.
  */
 public abstract class SObject {
-public abstract String toString();
-public abstract String toBasicString();
-public abstract String getType();
+	public abstract String toString();
+
+	public abstract String toBasicString();
+
+	public abstract String getType();
+
+	public abstract void retype(String type);
+
+	public abstract SObject shallowCopy();
+
+	public SObject deepCopy() {
+		return shallowCopy();
+	}
 }

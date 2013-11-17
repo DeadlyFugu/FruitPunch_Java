@@ -41,5 +41,20 @@ public class SJComparator implements SJInterface {
 				}
 			}
 		}));
+		root.bind("mt", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject b = stack.pop();
+				SObject a = stack.pop();
+				if (a instanceof SInteger) {
+					if (b instanceof SInteger) {
+						stack.push(new SBool(((SInteger) a).getInt() > ((SInteger) b).getInt()));
+					} else {
+						throw new SException("lt arg 2 should be int");
+					}
+				} else {
+					throw new SException("lt arg 1 should be int");
+				}
+			}
+		}));
 	}
 }

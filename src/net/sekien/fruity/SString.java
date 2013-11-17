@@ -5,26 +5,33 @@ package net.sekien.fruity;
  * File Templates.
  */
 public class SString extends SObject {
-private final String value;
+	private final String value;
 
-public SString(String value) {
-	this.value=value;
-}
+	public SString(String value) {
+		this.value = value;
+	}
 
-public String getString() {
-	return value;
-}
+	public String getString() {
+		return value;
+	}
 
-@Override public String toString() {
-	return "\""+value+"\"";
-}
+	@Override public String toString() {
+		return "\""+value+"\"";
+	}
 
-@Override public String toBasicString() {
-	return value;
-}
-
+	@Override public String toBasicString() {
+		return value;
+	}
 
 	@Override public String getType() {
 		return "str";
+	}
+
+	@Override public void retype(String type) {
+		throw new SException("cannot retype str");
+	}
+
+	@Override public SObject shallowCopy() {
+		return new SString(value);
 	}
 }

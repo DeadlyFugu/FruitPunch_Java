@@ -10,6 +10,7 @@ public class SClosure extends SObject {
 	protected HashMap<String, SObject> variables;
 	protected SClosure parent;
 	protected String[] tokens;
+	private String type = "closure";
 
 	private SClosure resolved_context;
 	private String resolved_name;
@@ -179,7 +180,25 @@ public class SClosure extends SObject {
 	}
 
 	@Override public String getType() {
-		return "closure";
+		return type;
+	}
+
+	@Override public void retype(String type) {
+		this.type = type;
+	}
+
+	@Override public SObject shallowCopy() {
+		SClosure newobj = new SClosure(this.parent, tokens);
+		newobj.variables = (HashMap<String, SObject>) this.variables.clone();
+		return newobj;
+	}
+
+	@Override public SObject deepCopy() {
+		SClosure newobj = new SClosure(this.parent, tokens);
+		for (Map.Entry<String, SObject> var : variables.entrySet()) {
+			newobj.variables.put(var.getKey(), var.getValue().deepCopy());
+		}
+		return newobj;
 	}
 
 	public String[] getTokens() {
@@ -214,5 +233,10 @@ public class SClosure extends SObject {
 			if (var.getValue().equals(this)) return var.getKey();
 		}
 		return "<anon>";
+	}
+
+	public void setParent(SClosure parent) {
+		System.out.println("parent = "+parent);
+		this.parent = parent;
 	}
 }

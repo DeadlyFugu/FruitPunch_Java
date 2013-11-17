@@ -5,29 +5,37 @@ package net.sekien.fruity;
  * File Templates.
  */
 public class SInteger extends SObject {
-private final int value;
+	private final int value;
 
 	public SInteger(int value) {
-	this.value = value;
-}
+		this.value = value;
+	}
 
-public SInteger(String value) {
-	this(Integer.valueOf(value));
-}
+	public SInteger(String value) {
+		this(Integer.valueOf(value));
+	}
 
-public int getInt() {
-	return value;
-}
+	public int getInt() {
+		return value;
+	}
 
-@Override public String toString() {
-	return String.valueOf(value).concat(":int");
-}
+	@Override public String toString() {
+		return String.valueOf(value).concat(":int");
+	}
 
-@Override public String toBasicString() {
-	return String.valueOf(value);
-}
+	@Override public String toBasicString() {
+		return String.valueOf(value);
+	}
 
 	@Override public String getType() {
 		return "int";
+	}
+
+	@Override public void retype(String type) {
+		throw new SException("cannot retype int");
+	}
+
+	@Override public SObject shallowCopy() {
+		return new SInteger(value);
 	}
 }

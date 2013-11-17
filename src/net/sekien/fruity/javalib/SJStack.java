@@ -15,6 +15,16 @@ public class SJStack implements SJInterface {
 				stack.push(stack.peek());
 			}
 		}));
+		root.bind("scopy", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				stack.push(stack.peek().shallowCopy());
+			}
+		}));
+		root.bind("dcopy", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				stack.push(stack.peek().deepCopy());
+			}
+		}));
 		root.bind("pop", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				stack.pop();
