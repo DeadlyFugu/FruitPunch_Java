@@ -2,6 +2,8 @@ package net.sekien.fruity.javalib;
 
 import net.sekien.fruity.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -27,12 +29,41 @@ public class SJFunc implements SJInterface {
 				SObject args = stack.pop();
 				if (closure instanceof SClosure) {
 					if (args instanceof SString) {
-						((SClosure) closure).exec(stack, callStack);
+						String[] arg_list = ((SString) args).getString().split(",");
+						List<String> prepend_code = new ArrayList<String>(arg_list.length*3);
+						for (int i = arg_list.length-1; i >= 0; i--) {
+							String arg = arg_list[i];
+							String name, type;
+							if (arg.contains(":")) {
+								String[] parts = arg.split(":", 2);
+								name = parts[0];
+								type = parts[1];
+							} else {
+								name = arg;
+								type = null;
+							}
+							if (type != null) {
+								prepend_code.add("\""+type);
+								prepend_code.add("as:arg");
+							}
+							if (name.length() > 0) prepend_code.add(">>"+name);
+						}
+						String[] tokens = ((SClosure) closure).getTokens();
+						String[] new_closure_tokens = new String[tokens.length+prepend_code.size()];
+						int i = 0;
+						for (; i < prepend_code.size(); )
+							new_closure_tokens[i] = prepend_code.get(i++);
+						for (int k = 0; k < tokens.length; )
+							new_closure_tokens[i++] = tokens[k++];
+						SClosure new_closure = new SClosure(parent, new_closure_tokens);
+						new_closure.setParent(((SClosure) closure).getParent());
+						new_closure.copyVariablesOf((SClosure) closure);
+						stack.push(new_closure);
 					} else {
-						throw new SException("Error: can only lambda on a closure");
+						throw new SException("lambda arg 2 must be string");
 					}
 				} else {
-					throw new SException("Error: can only lambda on a closure");
+					throw new SException("lambda arg 1 must be closure");
 				}
 			}
 		}));
@@ -61,6 +92,18 @@ public class SJFunc implements SJInterface {
 				}
 				stack.clear();
 				stack.push(new SClosure(callStack.peek(), code));
+			}
+		}));
+		root.bind("parse", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject string = stack.pop();
+				if (string instanceof SString) {
+					for (String str : StackScriptParser.parse(((SString) string).getString())) {
+						stack.push(new SString(str));
+					}
+				} else {
+					throw new SException("parse arg is not a string");
+				}
 			}
 		}));
 	}

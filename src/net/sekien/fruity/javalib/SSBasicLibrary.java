@@ -19,6 +19,8 @@ public class SSBasicLibrary {
 		new SJContext().register(root);
 		new SJControl().register(root);
 		new SJComparator().register(root);
+		new SJString().register(root);
+		new SJExceptions().register(root);
 
 		root.bind(";", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {

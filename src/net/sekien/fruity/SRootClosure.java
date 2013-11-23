@@ -64,4 +64,8 @@ public class SRootClosure extends SClosure {
 	public SClosure getParent() {
 		throw new SException("'parent' on root closure");
 	}
+
+	@Override public String getName() {
+		return "<root>";
+	}
 }

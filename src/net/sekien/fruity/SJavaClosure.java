@@ -19,7 +19,7 @@ public class SJavaClosure extends SClosure {
 		try {
 			function.onCall(callStack, stack, this);
 		} catch (EmptyStackException e) {
-			throw new SException("Error: native call requires more arguments");
+			throw new SException(getFullName()+" (native) requires more arguments");
 		}
 	}
 
@@ -29,5 +29,13 @@ public class SJavaClosure extends SClosure {
 
 	@Override public String toBasicString() {
 		return toString();
+	}
+
+	@Override public SObject shallowCopy() {
+		return this;
+	}
+
+	@Override public SObject deepCopy() {
+		return this;
 	}
 }

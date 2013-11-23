@@ -29,7 +29,7 @@ public class SClosure extends SObject {
 		Stack<String> popFuncStack = new Stack<String>();
 
 		int t = 0;
-		while (t < tokens.length) {
+		while (t < tokens.length) try {
 			String token = tokens[t++];
 			resolve_test = true;
 			resolveContextAndName(token);
@@ -66,14 +66,19 @@ public class SClosure extends SObject {
 				stackStack.push(stack);
 				popFuncStack.push(null);
 			} else if (token.equals(")")) {
-				String popFunc = popFuncStack.pop();
+				String popFunc;
+				try {
+					popFunc = popFuncStack.pop();
+				} catch (EmptyStackException e) {
+					throw new SException("unmatched ')'");
+				}
 				if (popFunc != null) {
 					resolveContextAndName(popFunc);
 					SObject possibleMatch2 = resolved_context.getVariable(resolved_name);
 					if (possibleMatch2 != null && possibleMatch2 instanceof SClosure) {
 						((SClosure) possibleMatch2).exec(stack, callStack);
 					} else {
-						throw new SException("Error: No function bound to "+popFunc);
+						throw new SException("no function bound to "+popFunc);
 					}
 				}
 				stackStack.pop();
@@ -95,29 +100,35 @@ public class SClosure extends SObject {
 				}
 				stackStack.push(stack);
 			} else if (token.startsWith("{")) {
-				ArrayList<String> buildClosure = new ArrayList<String>();
-				String tok;
-				int lvl = 0;
-				while (true) {
-					tok = tokens[t++];
-					if (tok.equals("}")) {
-						if (lvl == 0) {
-							break;
+				try {
+					ArrayList<String> buildClosure = new ArrayList<String>();
+					String tok;
+					int lvl = 0;
+					while (true) {
+						tok = tokens[t++];
+						if (tok.equals("}")) {
+							if (lvl == 0) {
+								break;
+							} else {
+								lvl--;
+								buildClosure.add(tok);
+							}
 						} else {
-							lvl--;
+							if (tok.equals("{")) lvl++;
 							buildClosure.add(tok);
 						}
-					} else {
-						if (tok.equals("{")) lvl++;
-						buildClosure.add(tok);
 					}
+					String[] arr = new String[buildClosure.size()];
+					buildClosure.toArray(arr);
+					stack.push(new SClosure(this, arr));
+				} catch (ArrayIndexOutOfBoundsException e) {
+					throw new SException("syntax error: unmatched brace");
 				}
-				String[] arr = new String[buildClosure.size()];
-				buildClosure.toArray(arr);
-				stack.push(new SClosure(this, arr));
 			} else {
-				throw new SException("Error: No function bound to "+token);
+				throw new SException("no function bound to "+token);
 			}
+		} catch (EmptyStackException e) {
+			throw new SException("stack underflow");
 		}
 		callStack.pop();
 	}
@@ -236,7 +247,14 @@ public class SClosure extends SObject {
 	}
 
 	public void setParent(SClosure parent) {
-		System.out.println("parent = "+parent);
 		this.parent = parent;
+	}
+
+	public HashMap<String, SObject> getVariables() {
+		return variables;
+	}
+
+	public void copyVariablesOf(SClosure closure) {
+		this.variables = closure.variables;
 	}
 }

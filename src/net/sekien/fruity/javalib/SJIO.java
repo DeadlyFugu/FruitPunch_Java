@@ -64,11 +64,13 @@ public class SJIO implements SJInterface {
 		root.bind("__rf_push", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				String file = stack.peek().toBasicString();
-				filePrefix.push(file.substring(0, file.lastIndexOf('/') == -1?file.lastIndexOf('/'):file.length()));
+				int indexOfFinalSeparator = file.lastIndexOf('/');
+				filePrefix.push(file.substring(0, indexOfFinalSeparator == -1?0:indexOfFinalSeparator));
 			}
 		}));
 		root.bind("__rf_pop", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				if (filePrefix.isEmpty()) throw new SException("__rf_pop without matching __rf_push");
 				filePrefix.pop();
 			}
 		}));
@@ -77,8 +79,10 @@ public class SJIO implements SJInterface {
 	public String getFilePrefix() {
 		StringBuilder sb = new StringBuilder();
 		for (String s : filePrefix) {
-			sb.append(s);
-			sb.append(File.separatorChar);
+			if (!s.equals("")) {
+				sb.append(s);
+				sb.append(File.separatorChar);
+			}
 		}
 		return sb.toString();
 	}

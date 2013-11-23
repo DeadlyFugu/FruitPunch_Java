@@ -2,6 +2,7 @@ package net.sekien.fruity.javalib;
 
 import net.sekien.fruity.*;
 
+import java.util.Map;
 import java.util.Stack;
 
 public class SJContext implements SJInterface {
@@ -35,9 +36,11 @@ public class SJContext implements SJInterface {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				SObject closure = stack.pop();
 				SObject key = stack.pop();
-				if (closure instanceof SClosure)
-					((SClosure) closure).getVariable(key.toBasicString());
-				else throw new SException("getv arg 2 must be closure");
+				if (closure instanceof SClosure) {
+					SObject obj = ((SClosure) closure).getVariable(key.toBasicString());
+					if (obj == null) throw new SException("getv can not get unbound var "+key);
+					stack.push(obj);
+				} else throw new SException("getv arg 2 must be closure");
 			}
 		}));
 		root.bind("parent", new SJavaClosure(root, new JavaFunction() {
@@ -77,6 +80,21 @@ public class SJContext implements SJInterface {
 		root.bind("__in_jtype", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				stack.push(new SString(stack.pop().getClass().getName()));
+			}
+		}));
+		root.bind("pullall", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject dst = stack.pop();
+				SObject src = stack.pop();
+				if (dst instanceof SClosure) {
+					if (src instanceof SClosure) {
+						for (Map.Entry<String, SObject> entry : ((SClosure) src).getVariables().entrySet()) {
+							SObject value = entry.getValue();
+							if (value instanceof SClosure) ((SClosure) value).setParent((SClosure) dst);
+							((SClosure) dst).bindVariable(entry.getKey(), value);
+						}
+					} else throw new SException("pullall arg 2 must be closure");
+				} else throw new SException("pullall arg 1 must be closure");
 			}
 		}));
 	}
