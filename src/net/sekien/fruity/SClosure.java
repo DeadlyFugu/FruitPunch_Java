@@ -38,7 +38,7 @@ public class SClosure extends SObject {
 			if (possibleMatch != null) {
 				if (possibleMatch instanceof SClosure) {
 					try {
-						((SClosure) possibleMatch).exec(stack, callStack);
+						((SClosure) possibleMatch.shallowCopy()).exec(stack, callStack);
 					} catch (StackOverflowError e) {
 						throw new SException("Stack overflow");
 					}
@@ -99,7 +99,9 @@ public class SClosure extends SObject {
 					second.pop();
 				}
 				stackStack.push(stack);
-			} else if (token.startsWith("{")) {
+			} else if (token.endsWith("{")) {
+				boolean anon = false;
+				if (token.equals("{")) anon = true;
 				try {
 					ArrayList<String> buildClosure = new ArrayList<String>();
 					String tok;
@@ -114,13 +116,19 @@ public class SClosure extends SObject {
 								buildClosure.add(tok);
 							}
 						} else {
-							if (tok.equals("{")) lvl++;
+							if (tok.endsWith("{")) lvl++;
 							buildClosure.add(tok);
 						}
 					}
 					String[] arr = new String[buildClosure.size()];
 					buildClosure.toArray(arr);
-					stack.push(new SClosure(this, arr));
+					SClosure closure = new SClosure(this, arr);
+					if (anon)
+						stack.push(closure);
+					else {
+						closure.exec(stack, callStack);
+						bindVariable(token.substring(0, token.length()-1), closure);
+					}
 				} catch (ArrayIndexOutOfBoundsException e) {
 					throw new SException("syntax error: unmatched brace");
 				}

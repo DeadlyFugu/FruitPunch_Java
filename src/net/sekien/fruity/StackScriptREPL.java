@@ -18,7 +18,7 @@ public class StackScriptREPL {
 		SRootClosure root = new SRootClosure();
 		Stack<SObject> stk = new Stack<SObject>();
 		SSBasicLibrary.registerWith(root);
-		root.eval("\"Hello, welcome to the repl!\\nHave fun! (type 'exit' to close)\" print", stk);
+		root.eval("\"Hello, welcome to the repl!\\nHave fun! (type 'exit' to close)\" native:print", stk);
 		for (String arg : args) {
 			root.eval(arg, stk);
 		}

@@ -9,7 +9,8 @@ import java.util.Stack;
  * File Templates.
  */
 public class SSBasicLibrary {
-	public static void registerWith(SRootClosure root) {
+	public static void registerWith(SRootClosure real_root) {
+		SRootClosure root = new SRootClosure();
 		new SJStack().register(root);
 		new SJMath().register(root);
 		new SJFunc().register(root);
@@ -21,11 +22,15 @@ public class SSBasicLibrary {
 		new SJComparator().register(root);
 		new SJString().register(root);
 		new SJExceptions().register(root);
+		new SJSystem().register(root);
 
-		root.bind(";", new SJavaClosure(root, new JavaFunction() {
+		root.bind("StackClear", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				stack.clear();
 			}
 		}));
+
+		ReadOnlyClosure native_closure = new ReadOnlyClosure(real_root, root);
+		real_root.bind("native", native_closure);
 	}
 }

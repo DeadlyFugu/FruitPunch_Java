@@ -27,6 +27,14 @@ public class SJString implements SJInterface {
 				stack.push(new SString(a.toBasicString()));
 			}
 		}));
+		root.bind("toint", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject a = stack.pop();
+				if (a instanceof SString) {
+					stack.push(new SInteger(((SString) a).getString()));
+				}
+			}
+		}));
 		root.bind("splitOnFirst", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
 				SObject b = stack.pop();
