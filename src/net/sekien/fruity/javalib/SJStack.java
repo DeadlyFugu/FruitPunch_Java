@@ -60,5 +60,10 @@ public class SJStack implements SJInterface {
 				stack.addAll(reverse_stack);
 			}
 		}));
+		root.bind("sendback", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				stack.insertElementAt(stack.pop(), 0);
+			}
+		}));
 	}
 }

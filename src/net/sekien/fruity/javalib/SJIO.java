@@ -44,7 +44,7 @@ public class SJIO implements SJInterface {
 							f = new File(getFilePrefix()+((SString) obj).getString());
 						}
 						if (!f.exists()) {
-							throw new SException("Error: File not found for _rf: "+((SString) obj).getString());
+							throw new SException("Error: File not found for _rf: "+((SString) obj).getString()+" (expected at "+f+")");
 						}
 						BufferedReader reader = new BufferedReader(new FileReader(f));
 						String line;
@@ -63,9 +63,10 @@ public class SJIO implements SJInterface {
 		}));
 		root.bind("__rf_push", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				String file = stack.peek().toBasicString();
+				String file = stack.pop().toBasicString();
 				int indexOfFinalSeparator = file.lastIndexOf('/');
 				filePrefix.push(file.substring(0, indexOfFinalSeparator == -1?0:indexOfFinalSeparator));
+				stack.push(new SString(file.substring(indexOfFinalSeparator == -1?0:indexOfFinalSeparator+1)));
 			}
 		}));
 		root.bind("__rf_pop", new SJavaClosure(root, new JavaFunction() {
@@ -77,11 +78,13 @@ public class SJIO implements SJInterface {
 	}
 
 	public String getFilePrefix() {
-		StringBuilder sb = new StringBuilder();
-		for (String s : filePrefix) {
+		StringBuilder sb = new StringBuilder("/");
+		for (int i = filePrefix.size()-1; i >= 0; i--) {
+			String s = filePrefix.get(i);
+			if (s.equals("#BLANK#")) break;
 			if (!s.equals("")) {
-				sb.append(s);
-				sb.append(File.separatorChar);
+				sb.insert(0, s);
+				sb.insert(0, File.separatorChar);
 			}
 		}
 		return sb.toString();

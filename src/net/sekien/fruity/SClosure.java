@@ -15,6 +15,7 @@ public class SClosure extends SObject {
 	private SClosure resolved_context;
 	private String resolved_name;
 	private boolean resolve_test = false;
+	private static final String[] nodeTokens = new String[]{"this", "lsv"};
 
 	public SClosure(SClosure parent, String[] code) {
 		this.parent = parent;
@@ -32,7 +33,7 @@ public class SClosure extends SObject {
 		while (t < tokens.length) try {
 			String token = tokens[t++];
 			resolve_test = true;
-			resolveContextAndName(token);
+			resolveContextAndName(token, stack);
 			resolve_test = false;
 			SObject possibleMatch = resolved_context.getVariable(resolved_name);
 			if (possibleMatch != null) {
@@ -46,7 +47,7 @@ public class SClosure extends SObject {
 					stack.push(possibleMatch);
 				}
 			} else if (token.startsWith("$")) {
-				resolveContextAndName(token.substring(1));
+				resolveContextAndName(token.substring(1), stack);
 				SObject value = resolved_context.getVariable(resolved_name);
 				if (value == null) {
 					throw new SException("Error: can not get unbound var "+token.substring(1));
@@ -54,13 +55,15 @@ public class SClosure extends SObject {
 					stack.push(value);
 				}
 			} else if (token.startsWith(">>")) {
-				resolveContextAndName(token.substring(2));
+				resolveContextAndName(token.substring(2), stack);
 				resolved_context.variables.put(resolved_name, stack.pop());
 			} else if (token.startsWith(">")) {
-				resolveContextAndName(token.substring(1));
+				resolveContextAndName(token.substring(1), stack);
 				resolved_context.setVariable(resolved_name, stack.pop());
 			} else if (token.matches("[0-9]+")) {
 				stack.push(new SInteger(token));
+			} else if (token.startsWith("\"")) {
+				stack.push(new SString(token.substring(1)));
 			} else if (token.equals("(")) {
 				stack = new Stack<SObject>();
 				stackStack.push(stack);
@@ -73,7 +76,7 @@ public class SClosure extends SObject {
 					throw new SException("unmatched ')'");
 				}
 				if (popFunc != null) {
-					resolveContextAndName(popFunc);
+					resolveContextAndName(popFunc, stack);
 					SObject possibleMatch2 = resolved_context.getVariable(resolved_name);
 					if (possibleMatch2 != null && possibleMatch2 instanceof SClosure) {
 						((SClosure) possibleMatch2).exec(stack, callStack);
@@ -88,8 +91,6 @@ public class SClosure extends SObject {
 				stack = new Stack<SObject>();
 				stackStack.push(stack);
 				popFuncStack.push(token.substring(0, token.length()-1));
-			} else if (token.startsWith("\"")) {
-				stack.push(new SString(token.substring(1)));
 			} else if (token.matches("\\.+")) {
 				stackStack.pop();
 				Stack<SObject> second = stackStack.peek();
@@ -127,7 +128,10 @@ public class SClosure extends SObject {
 						stack.push(closure);
 					else {
 						closure.exec(stack, callStack);
-						bindVariable(token.substring(0, token.length()-1), closure);
+						closure.setTokens(nodeTokens);
+						resolveContextAndName(token.substring(0, token.length()-1), stack);
+						closure.setParent(resolved_context);
+						resolved_context.bindVariable(resolved_name, closure);
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {
 					throw new SException("syntax error: unmatched brace");
@@ -141,10 +145,26 @@ public class SClosure extends SObject {
 		callStack.pop();
 	}
 
-	private void resolveContextAndName(String reference) {
-		String[] parts = (reference.startsWith(":")?reference.substring(1):reference).split(":");
-		resolved_name = parts[parts.length-1];
+	private void resolveContextAndName(String reference, Stack<SObject> stack) {
+		String[] parts;
 		resolved_context = this;
+		switch (reference.charAt(0)) {
+			case ':': {
+				parts = reference.substring(1).split(":");
+				try {
+					resolved_context = (SClosure) stack.pop();
+				} catch (Exception e) {
+					throw new SException("reference '"+reference+"' could not obtain closure off the stack");
+				}
+			} break;
+			case '#': {
+				parts = reference.substring(1).split(":");
+				if (!(resolved_context instanceof SRootClosure))
+					while (!((resolved_context = resolved_context.getParent()) instanceof SRootClosure)) ;
+			} break;
+			default: parts = reference.split(":");
+		}
+		resolved_name = parts[parts.length-1];
 		for (int i = 0; i < parts.length-1; i++) {
 			SObject tmp = resolved_context.getVariable(parts[i]);
 			if (tmp != null && tmp instanceof SClosure) {
@@ -264,5 +284,13 @@ public class SClosure extends SObject {
 
 	public void copyVariablesOf(SClosure closure) {
 		this.variables = closure.variables;
+	}
+
+	public void setTokens(String[] tokens) {
+		this.tokens = tokens;
+	}
+
+	@Override public boolean equals(Object obj) {
+		return obj instanceof SClosure && variables.equals(((SClosure) obj).variables) && Arrays.equals(tokens, ((SClosure) obj).tokens);
 	}
 }

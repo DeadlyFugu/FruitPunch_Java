@@ -1,50 +1,40 @@
 import net.sekien.fruity.*;
-import org.lwjgl.LWJGLException;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.util.Stack;
 
 public class FGL_Input {
 	public static void register(SClosure root) {
-		SClosure namespace = new SClosure(root, new String[0]);
-		root.bindVariable("display", namespace);
-
-		namespace.bindVariable("create", new SJavaClosure(root, new JavaFunction() {
+		root.bindVariable("mouse_down", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				try {
-					Display.create();
-				} catch (LWJGLException e) {
-					throw new SException("gl:display:create "+e.getMessage());
-				}
+				int button = JavaHelper.getInt(stack, "mouse_down", 1);
+				stack.push(new SBool(Mouse.isButtonDown(button)));
 			}
 		}));
-		namespace.bindVariable("setsize", new SJavaClosure(root, new JavaFunction() {
+		root.bindVariable("mouse_pos", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				try {
-					int height = JavaHelper.getInt(stack, "setsize", 2);
-					int width = JavaHelper.getInt(stack, "setsize", 1);
-					Display.setDisplayMode(new DisplayMode(
-					                                      width,
-					                                      height));
-				} catch (LWJGLException e) {
-					throw new SException("gl:display:setsize "+e.getMessage());
-				}
+				stack.push(new SInteger(Mouse.getX()));
+				stack.push(new SInteger(Mouse.getY()));
 			}
 		}));
-		namespace.bindVariable("isopen", new SJavaClosure(root, new JavaFunction() {
+		root.bindVariable("kbd_down", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				stack.push(new SBool(!Display.isCloseRequested()));
+				int key = JavaHelper.getInt(stack, "kbd_down", 1);
+				stack.push(new SBool(Keyboard.isKeyDown(key)));
 			}
 		}));
-		namespace.bindVariable("update", new SJavaClosure(root, new JavaFunction() {
+		root.bindVariable("kbd_next", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				Display.update();
+				stack.push(new SBool(Keyboard.next()));
 			}
 		}));
-		namespace.bindVariable("destroy", new SJavaClosure(root, new JavaFunction() {
+		root.bindVariable("kbd_event_info", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				Display.destroy();
+				stack.push(new SInteger(Keyboard.getEventKey()));
+				stack.push(new SBool(Keyboard.getEventKeyState()));
+				stack.push(new SInteger(Keyboard.getEventCharacter()));
+				stack.push(new SLong(Keyboard.getEventNanoseconds()));
 			}
 		}));
 	}

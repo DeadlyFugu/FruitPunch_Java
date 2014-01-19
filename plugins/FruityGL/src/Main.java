@@ -16,6 +16,7 @@ public class Main {
 			}
 		}));
 		FGL_Display.register(namespace);
+		FGL_Input.register(namespace);
 		System.setProperty("org.lwjgl.librarypath", System.getProperty("user.dir")+"/plugins/FruityGL/lib/native");
 	}
 }

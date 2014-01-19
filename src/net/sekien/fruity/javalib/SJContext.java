@@ -14,9 +14,9 @@ public class SJContext implements SJInterface {
 		}));
 		root.bind("setv", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				SObject closure = stack.pop();
 				SObject value = stack.pop();
 				SObject key = stack.pop();
+				SObject closure = stack.pop();
 				if (closure instanceof SClosure)
 					((SClosure) closure).setVariable(key.toBasicString(), value);
 				else throw new SException("setv arg 3 must be closure");
@@ -24,9 +24,9 @@ public class SJContext implements SJInterface {
 		}));
 		root.bind("bindv", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				SObject closure = stack.pop();
 				SObject value = stack.pop();
 				SObject key = stack.pop();
+				SObject closure = stack.pop();
 				if (closure instanceof SClosure)
 					((SClosure) closure).bindVariable(key.toBasicString(), value);
 				else throw new SException("bind arg 3 must be closure");
@@ -34,13 +34,23 @@ public class SJContext implements SJInterface {
 		}));
 		root.bind("getv", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				SObject closure = stack.pop();
 				SObject key = stack.pop();
+				SObject closure = stack.pop();
 				if (closure instanceof SClosure) {
 					SObject obj = ((SClosure) closure).getVariable(key.toBasicString());
 					if (obj == null) throw new SException("getv can not get unbound var "+key);
 					stack.push(obj);
 				} else throw new SException("getv arg 2 must be closure");
+			}
+		}));
+		root.bind("hasv", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject key = stack.pop();
+				SObject closure = stack.pop();
+				if (closure instanceof SClosure) {
+					SObject obj = ((SClosure) closure).getVariable(key.toBasicString());
+					stack.push(new SBool(obj != null));
+				} else throw new SException("hasv arg 2 must be closure");
 			}
 		}));
 		root.bind("parent", new SJavaClosure(root, new JavaFunction() {
@@ -95,6 +105,14 @@ public class SJContext implements SJInterface {
 						}
 					} else throw new SException("pullall arg 2 must be closure");
 				} else throw new SException("pullall arg 1 must be closure");
+			}
+		}));
+		root.bind("getname", new SJavaClosure(root, new JavaFunction() {
+			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
+				SObject closure = stack.pop();
+				if (closure instanceof SClosure)
+					stack.push(new SString(((SClosure) closure).getName()));
+				else throw new SException("getnameh arg must be closure");
 			}
 		}));
 	}

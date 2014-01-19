@@ -25,9 +25,10 @@ public class SJFunc implements SJInterface {
 		}));
 		root.bind("execst", new SJavaClosure(root, new JavaFunction() {
 			@Override public void onCall(Stack<SClosure> callStack, Stack<SObject> stack, SClosure parent) {
-				SObject obj = stack.peek();
+				SObject obj = stack.pop();
 				if (obj instanceof SClosure) {
 					((SClosure) obj).exec(stack, callStack);
+					stack.push(obj);
 				} else {
 					throw new SException("can only execst on a closure");
 				}
